@@ -98,3 +98,7 @@ It stacks the cross-encoder scores, writes predictions, applies the recheck, run
 ```bash
 cd src && $PYTHON package_submission.py <team> <matching.tsv> <candidates.tsv>
 ```
+
+### 9. Final candidate file (`assemble/build_candidates.py`)
+
+`python assemble/build_candidates.py <matching_results.tsv> <candidate_pairs.tsv>` writes the packaged candidate file: exactly the pairs the final models scored (US and Indian blocking candidates, the French re-run candidates, every scored rescue pool) plus every final match. For the submitted file it gives 19,691,692 pairs and 0 matches missing, and it reproduces the packaged `candidate_pairs.tsv` byte for byte.

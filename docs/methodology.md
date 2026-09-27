@@ -106,18 +106,18 @@ Steps 1 to 10 are the scripts in `src/`; steps 6 and 11 to 13 are in `src/final_
 - **Scoring.** A candidate's blocking score is the sum of the IDF (computed on the split's own Source 1 file) of all keys it shares with the record. Unigrams are used as join keys only when at most 50 Source 1 records carry them, all other keys when at most 500 do. Each record keeps at most 10 candidates, and only those scoring at least half of its best candidate's score.
 - **Engineering.** Entity IDs and keys are hashed to integers and the join runs in DuckDB over 40 slices of the Source 2/3 records with capped memory and spill, so the whole train or test set blocks on a 16 GB laptop.
 - **Candidate pairs generated:** 17,769,228 for train (10,287,648 records) and 19,225,118 for test (9,947,553 records). The v15 `candidate_pairs.tsv` holds 19,246,911 pairs: the blocking set plus the pairs added by the French exact-address rule, the France audit rules and the rescue pass. The v17 candidate file holds 19,250,779 pairs: the v15 file plus the 3,868 French pairs that v17 matches and the v15 file did not contain. Every submitted match is also in the candidate file.
-- **Final candidate file (v21 `candidate_pairs.tsv`):** 19,258,685 pairs over all 1,732,544 Source 1 rows: the v17 file plus the pairs added by the late rescue and France steps (Section 4.9) that it did not already contain. We checked that all 5,833,349 submitted matches are in it (0 missing).
+- **Final candidate file (`candidate_pairs.tsv` in the package):** 19,691,692 pairs over all 1,732,544 Source 1 rows. It is exactly the set of pairs the final models scored: the blocking candidates for US and Indian entities (scored by both LightGBM stages), the French candidates from the re-run with the fixed French normalization (Section 4.8), every pair scored by the rescue steps (445,514 rescue pairs including the French rescue pool, 22,504 name-key pairs, 24,871 hc pairs and 204,736 reverse-blocking pairs), and every submitted match. All 5,833,349 submitted matches are in it (0 missing), and the official validator passes.
 
-| Candidates per Source 1 entity (v21) | Value |
+| Candidates per Source 1 entity (final file) | Value |
 | --- | --- |
-| Mean | 11.12 |
-| Median | 9 |
-| 90th / 99th percentile | 18 / 36 |
-| Maximum | 4,433 |
-| Source 1 entities with no candidate | 45 |
-| Entities with 1 to 5 candidates | 217,764 |
-| Entities with 6 to 10 candidates | 814,838 |
-| Entities with 11 or more candidates | 699,897 |
+| Mean | 11.37 (US 9.59, India 11.81, France 14.51) |
+| Median | 10 |
+| 90th / 99th percentile | 18 / 37 |
+| Maximum | 4,434 |
+| Source 1 entities with no candidate | 29 |
+| Entities with 1 to 5 candidates | 190,926 |
+| Entities with 6 to 10 candidates | 795,559 |
+| Entities with 11 or more candidates | 746,030 |
 
 - **How we ensured true matches were not lost:** recall was measured against the full training ground truth after every change, and new keys were designed from the misses.
 
@@ -336,7 +336,7 @@ The final file is built by one chain (`src/final_steps/`, run order in its `READ
 | **v21 (final)** | + hc and reverse rescue (2,491 additions), 24 French empty-entity fills | +0.000075 held-out | 0.988642 (v21, the last upload; v20 scored 0.988549) |
 | v22 (only if uploaded last) | v21 chain with bge-reranker-v2-m3 as a fifth cross-encoder | | |
 
-The v15 file assigns 5,817,948 of the 9,969,589 test Source 2/3 records (France 58.9%, India 57.9%, US 58.8%) and leaves 100,309 of the 1,732,544 Source 1 entities empty. The final v17 file assigns 5,829,018 records (France 59.7%, India 57.9%, US 58.8%) and leaves 100,036 Source 1 entities empty. The final v21 file assigns 5,833,349 records, leaves 99,991 Source 1 entities empty and has 19,258,685 candidate pairs. All three pass the official `validate_submission.py`.
+The v15 file assigns 5,817,948 of the 9,969,589 test Source 2/3 records (France 58.9%, India 57.9%, US 58.8%) and leaves 100,309 of the 1,732,544 Source 1 entities empty. The final v17 file assigns 5,829,018 records (France 59.7%, India 57.9%, US 58.8%) and leaves 100,036 Source 1 entities empty. The final v21 file assigns 5,833,349 records, leaves 99,991 Source 1 entities empty and has 19,691,692 candidate pairs (exactly the pairs the final models scored). All three pass the official `validate_submission.py`.
 
 **What worked** (validation gains where measured): cross keys and spaceless keys (blocking top 10 recall 94.45% to 97.05%); the learned transliteration map (exact core-name agreement for transliterated Indian names 15.3% to 89.5%); stage 2 context (0.9664 to 0.9714 on the older unweighted metric); odd-one-out stage 2 with the sibling rule (0.98241 to 0.98470; the French parts of v10 do not touch this US/India number); the cross-encoder stack with expected-F0.5 selection (+0.00246); a second cross-encoder (+0.00061); the Kaggle e5-base cross-encoder (+0.00054 before rescue); rescue (+0.00071); the French address fix with the filter against v15 (modelled +0.0010 central, +0.0005 pessimistic, Section 4.8; the leaderboard moved +0.0003); the fourth cross-encoder (+0.00013); the high-confidence recheck (+0.0001); name-key rescue (+0.00017 held-out); hc and reverse rescue (+0.000075 held-out). v17 to v20 moved the leaderboard by +0.00145.
 
@@ -479,4 +479,4 @@ How the final v21 file was assembled (the chain in `src/final_steps/`):
 | Name-key rescue (nm1d) | 3,169 added |
 | hc and reverse rescue | 2,491 added (2,252 hc, 563 reverse, 324 shared) |
 | France empty-entity fill | 24 added |
-| Final | 5,833,349 matches; 99,991 empty Source 1 entities; 19,258,685 candidate pairs; every match in the candidate file |
+| Final | 5,833,349 matches; 99,991 empty Source 1 entities; 19,691,692 candidate pairs (exactly the pairs the final models scored); every match in the candidate file |

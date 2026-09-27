@@ -229,7 +229,7 @@ The final file is built by one chain in `src/final_steps/`. The exact commands, 
 
 The scripts take their locations from two environment variables: `REPO_DIR` (this folder, default `.`) and `WORK_DIR` (intermediate files, default `work`). The chain rebuilds v21 exactly from the saved scores and change sets. `src/final_steps/README.md` also covers the scripts that produced the change sets (the French-adapted cross-encoder, the French rescue pool, the nm1d, hc and reverse searches, the fill pool and their gates); the methodology (Section 4.9) gives the numbers each gate produced.
 
-Reference counts for v21: 1,732,544 Source 1 rows, 99,991 of them empty, 5,833,349 matched records and 19,258,685 candidate pairs (11.12 per Source 1 on average, median 9, 45 rows with no candidate). Every match is in the candidate file, and the validator passes.
+Reference counts for v21: 1,732,544 Source 1 rows, 99,991 of them empty, 5,833,349 matched records and 19,691,692 candidate pairs in the packaged `candidate_pairs.tsv` (exactly the pairs the final models scored: US/India blocking candidates, the French re-run candidates and every scored rescue pool; 11.37 per Source 1 on average, median 10, 29 rows with no candidate). Every match is in the candidate file, and the validator passes.
 
 ### 14. Package
 
