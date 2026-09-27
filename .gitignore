@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+student_resource/
+data/
+dataset/
+output/
+models/
+work/
+*.tsv
+*.csv
+*.parquet
+*.pt
+*.duckdb
+*.zip
