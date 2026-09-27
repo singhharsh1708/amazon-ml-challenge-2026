@@ -1,6 +1,6 @@
 # Business Entity Resolution: reproduction
 
-This repository regenerates `output/matching_results.tsv` and `output/candidate_pairs.tsv` from the challenge data. It uses only the provided training and test files: no external lookups, APIs, geocoding or internet data. The only outside artefacts are the pretrained weights of `intfloat/multilingual-e5-small`, `intfloat/multilingual-e5-base` and `intfloat/multilingual-e5-large` (MIT licence) and, only if v22 is the final file, `BAAI/bge-reranker-v2-m3` (Apache 2.0). The cross-encoder steps download them from the public model hub and fine-tune them on the training pairs. The methodology is in [methodology.md](methodology.md).
+This folder regenerates `output/matching_results.tsv` and `output/candidate_pairs.tsv` from the challenge data. It uses only the provided training and test files: no external lookups, APIs, geocoding or internet data. The only outside artefacts are the pretrained weights of `intfloat/multilingual-e5-small`, `intfloat/multilingual-e5-base` and `intfloat/multilingual-e5-large` (MIT licence) and, only if v22 is the final file, `BAAI/bge-reranker-v2-m3` (Apache 2.0). The cross-encoder steps download them from the public model hub and fine-tune them on the training pairs. The methodology is in `Documentation_template.md`.
 
 The final file is v21 (`matching_results_v21.tsv`, `candidate_pairs_v21.tsv`): steps 1 to 12 below produce the scores, rule sets and French rows it is built from, and step 13 (`src/final_steps/`) builds it.
 
@@ -30,7 +30,7 @@ All intermediate files go to `data/`, models to `models/`, outputs to `output/`.
 
 ## Run order
 
-Run from the repository root, in this order. Each step reads the files the previous steps wrote.
+Run from this folder, in this order. Each step reads the files the previous steps wrote.
 
 ### 1. Normalization and blocking
 
@@ -174,7 +174,7 @@ v17 has the same US and Indian rows as v15. Its French rows come from step 12, n
 v17 is v15 with only the French Source 1 rows replaced. They come from a France-only re-run of the pipeline on the fixed address normalization, with the v15 models, followed by a filter against v15:
 
 1. `normalize.py` applies four fixes to French addresses (`normalize_address_france`): it removes region and department names and the `N°` sign, splits number suffixes (`19BIS` to `19 bis`, `5B` to `5 bis`), and maps French street-type abbreviations to one form.
-2. Re-run scripts normalize the French records into their own folder, block them, score them with stage 1, stage 2 and the France guard, re-stack the band with the v15 stacker, and apply the France decision and rules. They import the pipeline modules (`block_candidates`, `build_features`, `train_stage2`, `address_rules`, `france_rules`, `decoy_veto`) from a copy of `src/` taken before the changes described in this step, whose `config.py` points at the re-run folder. The re-run scripts are in `src/final_steps/france_rerun/` (with a copy in `research/france_rerun/`).
+2. Re-run scripts normalize the French records into their own folder, block them, score them with stage 1, stage 2 and the France guard, re-stack the band with the v15 stacker, and apply the France decision and rules. They import the pipeline modules (`block_candidates`, `build_features`, `train_stage2`, `address_rules`, `france_rules`, `decoy_veto`) from a copy of `src/` taken before the changes described in this step, whose `config.py` points at the re-run folder. The re-run scripts themselves are working scripts kept outside `src/` and are not in this folder.
 3. `france_rules.py partial` drops the new French pairs whose house number or street differs from the Source 1 address and puts back v15 pairs that the re-run lost through its score, guard or blocking when name and address agree.
 4. A merge script replaces the French rows of the v15 matching file with the filtered pairs.
 
@@ -227,7 +227,7 @@ The final file is built by one chain in `src/final_steps/`. The exact commands, 
 8. **France empty-entity fill.** 24 strict French pairs for Source 1 entities that would otherwise stay empty.
 9. **Validator.** `utils/validate_submission.py` on the two files.
 
-The scripts take their locations from two environment variables: `REPO_DIR` (the repository root, default `.`) and `WORK_DIR` (intermediate files, default `work`). The chain rebuilds v21 exactly from the saved scores and change sets. `src/final_steps/README.md` also covers the scripts that produced the change sets (the French-adapted cross-encoder, the French rescue pool, the nm1d, hc and reverse searches, the fill pool and their gates); the methodology (Section 4.9) gives the numbers each gate produced.
+The scripts take their locations from two environment variables: `REPO_DIR` (this folder, default `.`) and `WORK_DIR` (intermediate files, default `work`). The chain rebuilds v21 exactly from the saved scores and change sets. `src/final_steps/README.md` also covers the scripts that produced the change sets (the French-adapted cross-encoder, the French rescue pool, the nm1d, hc and reverse searches, the fill pool and their gates); the methodology (Section 4.9) gives the numbers each gate produced.
 
 Reference counts for v21: 1,732,544 Source 1 rows, 99,991 of them empty, 5,833,349 matched records and 19,691,692 candidate pairs in the packaged `candidate_pairs.tsv` (exactly the pairs the final models scored: US/India blocking candidates, the French re-run candidates and every scored rescue pool; 11.37 per Source 1 on average, median 10, 29 rows with no candidate). Every match is in the candidate file, and the validator passes.
 

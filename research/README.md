@@ -50,6 +50,6 @@ Run with the old normalization first; it must reproduce the submitted French sco
 
 ## Ideas not finished
 
-- Cross-encoder rescoring of French rescue candidates (rescue is US/India only today).
-- A larger cross-encoder (e5-large) in the stack; the first run needed frozen embeddings to fit a T4.
-- Address-less records whose name is shared by many companies stay the largest unsolved loss (about 0.005 of local F0.5); no signal separates the branches of a chain.
+- Cross-encoder rescoring of French rescue candidates beyond the checked set (rescue acceptance for France stayed gated by hand review).
+- A larger reranker trained on all pairs: bge-reranker-v2-m3 trained on 200k pairs did not add to the four e5 models; a full-data run might.
+- Address-less records whose name is shared by many companies remain the largest unsolved loss (about 0.005 of local F0.5); no signal in the data separates the branches of a chain.
